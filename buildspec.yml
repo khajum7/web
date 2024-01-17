@@ -6,3 +6,4 @@ phases:
       - echo Build started on `date`
       - echo "Hello Khajum" > output.txt
       - echo Build completed on `date`
+ 
