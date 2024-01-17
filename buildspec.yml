@@ -1,15 +1,5 @@
-version: 0.2
-
 phases:
-  install:
-    runtime-versions:
-      python: 3.11
-
   build:
     commands:
       - echo "Building and running try.py..."
       - python try.py
-
-artifacts:
-  files: '**/*'
-  name: MyPythonArtifact
