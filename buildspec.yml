@@ -1,49 +1,22 @@
-Stages:
-  - Name: Source
-    Actions:
-      - Name: SourceCode
-        ActionTypeId:
-          Category: Source
-          Owner: khajum7
-          Provider: GitHub
-          Version: 1
-        Configuration:
-          Owner: khajum7
-          Repo: web
-          Branch: main
-          OAuthToken: YOUR_GITHUB_TOKEN
-          PollForSourceChanges: true
-        OutputArtifacts:
-          - Name: SourceOutput
+version: 0.2
 
-  # Optional build stage
-  - Name: Build
-    Actions:
-      - Name: BuildAction
-        ActionTypeId:
-          Category: Build
-          Owner: AWS
-          Provider: CodeBuild
-          Version: 1
-        Configuration:
-          ProjectName: CICD-testing
-        InputArtifacts:
-          - Name: SourceOutput
-        OutputArtifacts:
-          - Name: BuildOutput
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt
 
-  - Name: Deploy
-    Actions:
-      - Name: DeployToLambda
-        ActionTypeId:
-          Category: Deploy
-          Owner: AWS
-          Provider: Lambda
-          Version: 1
-        Configuration:
-          FunctionName: lambda-testing
-          ActionMode: Replace
-          RoleArn: arn:aws:lambda:us-west-1:177453828722:function:lambda-testing
-          InputArtifacts:
-            - Name: SourceOutput
-        RunOrder: 1
+  build:
+    commands:
+      - echo "Building Lambda deployment package..."
+      # Replace the following with your build commands, such as compiling code, running tests, etc.
+      - echo "Build commands go here"
+
+  post_build:
+    commands:
+      - echo "Deploying to Lambda..."
+      # AWS Lambda deployment command
+      - aws lambda update-function-code --function-name lambda-testing --zip-file fileb://lambda.zip --region us-west-1
+      # You may need to add additional configuration options such as role ARN, if necessary
