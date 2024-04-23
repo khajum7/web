@@ -8,4 +8,4 @@ phases:
     commands:
       - echo "Updating Lambda function..."
       - aws lambda update-function-code --function-name lambda-testing --zip-file fileb://deployment_package.zip
-      - echo "DONE!!"
+      - echo "DONE thikxa!!"
