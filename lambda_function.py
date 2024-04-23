@@ -3,6 +3,9 @@ import json
 def lambda_handler(event, context):
     print("event",event)
     print("fail")
+
+
+    
     # Retrieve data from the event
     message = event['message']
     
