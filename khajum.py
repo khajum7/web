@@ -1,7 +1,7 @@
 # try.py
 
 def main():
-    print("hello ko ban and i am done")
+    print("Lambda cicd testing")
     print("This is the change in code so it should work yes no")
 
 if __name__ == "__main__":
