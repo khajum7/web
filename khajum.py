@@ -1,7 +1,7 @@
 # try.py
 
 def main():
-    print("hello ko ban and i am done")
+    print("Malai maan parne kt Nepali")
     print("This is the change in code so it should work yes it is")
 
 if __name__ == "__main__":
