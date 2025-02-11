@@ -4,26 +4,30 @@ phases:
   install:
     commands:
       - echo "Installing dependencies..."
-      - pip install jq
+      - apt-get update && apt-get install -y jq
 
   pre_build:
     commands:
       - echo "Fetching latest commit ID..."
-      - COMMIT_ID=$(git rev-parse HEAD)
-      - echo "Commit ID: $COMMIT_ID"
-
+      - |
+        export COMMIT_ID=$(git rev-parse HEAD)
+        echo "Commit ID: $COMMIT_ID"
+      
       - echo "Fetching changed files..."
-      - CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r $COMMIT_ID)
-      - echo "Changed Files:"
-      - echo "$CHANGED_FILES"
+      - |
+        export CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r $COMMIT_ID)
+        echo "Changed Files:"
+        echo "$CHANGED_FILES"
 
       - echo "Extracting unique repositories..."
-      - echo "$CHANGED_FILES" | awk -F'/' '{print $1}' | sort -u > repo_names.txt
-      - cat repo_names.txt
+      - |
+        echo "$CHANGED_FILES" | awk -F'/' '{print $1}' | sort -u > repo_names.txt
+        cat repo_names.txt
 
       - echo "Extracting affected directories..."
-      - echo "$CHANGED_FILES" | awk -F'/' '{print $1"/"$2}' | sort -u > affected_dirs.txt
-      - cat affected_dirs.txt
+      - |
+        echo "$CHANGED_FILES" | awk -F'/' '{print $1"/"$2}' | sort -u > affected_dirs.txt
+        cat affected_dirs.txt
 
   build:
     commands:
