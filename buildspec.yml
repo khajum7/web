@@ -18,14 +18,12 @@ phases:
       - echo "$CHANGED_FILES"
 
       - echo "Extracting unique repositories..."
-      - REPO_NAMES=$(echo "$CHANGED_FILES" | awk -F'/' '{print $1}' | sort -u)
-      - echo "Repositories affected:"
-      - echo "$REPO_NAMES"
+      - echo "$CHANGED_FILES" | awk -F'/' '{print $1}' | sort -u > repo_names.txt
+      - cat repo_names.txt
 
       - echo "Extracting affected directories..."
-      - AFFECTED_DIRS=$(echo "$CHANGED_FILES" | awk -F'/' '{print $1"/"$2}' | sort -u)
-      - echo "Affected Directories:"
-      - echo "$AFFECTED_DIRS"
+      - echo "$CHANGED_FILES" | awk -F'/' '{print $1"/"$2}' | sort -u > affected_dirs.txt
+      - cat affected_dirs.txt
 
   build:
     commands:
