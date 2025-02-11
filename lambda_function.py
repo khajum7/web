@@ -9,7 +9,7 @@ def lambda_handler(event, context):
     # Process the message
     processed_message = message.upper()
     
-    # Construct the response
+    # Constrfdghuct the response
     response = {
         'statusCode': 200,
         'body': json.dumps({
