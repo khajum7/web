@@ -1,11 +1,36 @@
 version: 0.2
+
 phases:
+  install:
+    commands:
+      - echo "Installing dependencies..."
+      - pip install jq
+
+  pre_build:
+    commands:
+      - echo "Fetching latest commit ID..."
+      - COMMIT_ID=$(git rev-parse HEAD)
+      - echo "Commit ID: $COMMIT_ID"
+
+      - echo "Fetching changed files..."
+      - CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r $COMMIT_ID)
+      - echo "Changed Files:"
+      - echo "$CHANGED_FILES"
+
+      - echo "Extracting unique repositories..."
+      - REPO_NAMES=$(echo "$CHANGED_FILES" | awk -F'/' '{print $1}' | sort -u)
+      - echo "Repositories affected:"
+      - echo "$REPO_NAMES"
+
+      - echo "Extracting affected directories..."
+      - AFFECTED_DIRS=$(echo "$CHANGED_FILES" | awk -F'/' '{print $1"/"$2}' | sort -u)
+      - echo "Affected Directories:"
+      - echo "$AFFECTED_DIRS"
+
   build:
     commands:
-      - echo "Zipping deployment package..."
-      - zip -r deployment_package.zip khajum.py
+      - echo "No Lambda updates for now. Just verifying repo detection."
+
   post_build:
     commands:
-      - echo "Updating Lambda function..."
-      - aws lambda update-function-code --function-name Testing-CICD --zip-file fileb://deployment_package.zip
-      - echo "DONE thikxaaaaa!!"
+      - echo "Build completed successfully!"
