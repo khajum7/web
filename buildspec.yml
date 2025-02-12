@@ -15,7 +15,7 @@ phases:
   pre_build:
     commands:
       - echo "Cloning repository..."
-      - git clone https://github.com/your-user/your-repository.git
+      - git clone https://github.com/khajum7/web.git
       - cd your-repository
       - echo "Fetching changed files..."
       - git fetch origin main  # Ensure latest commit history, replace 'main' with 'master' if needed
