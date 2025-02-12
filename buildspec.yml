@@ -3,27 +3,48 @@ version: 0.2
 phases:
   install:
     commands:
-      - echo "Installing dependencies..."
+      - echo "==================== INSTALL PHASE ===================="
+      - echo "Updating system and installing dependencies..."
       - apt-get update && apt-get install -y jq
+      - echo "Installation complete."
 
   pre_build:
     commands:
+      - echo "==================== PRE-BUILD PHASE ===================="
       - echo "Fetching commit ID from CodeBuild environment..."
+      - echo "CODEBUILD_RESOLVED_SOURCE_VERSION: $CODEBUILD_RESOLVED_SOURCE_VERSION"
       - export COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo "Commit ID: $COMMIT_ID"
 
-      - echo "Fetching changed files from CodePipeline..."
-      - ls -R > files_list.txt
-      - cat files_list.txt
+      - echo "Listing all files in the source directory..."
+      - ls -lahR /codebuild/output/src > all_files.txt
+      - cat all_files.txt
+
+      - echo "Fetching changed files..."
+      - git --version
+      - git status
+      - git diff --name-only HEAD~1 > changed_files.txt || echo "No previous commit found, skipping diff."
+      - echo "Changed Files:"
+      - cat changed_files.txt
 
       - echo "Extracting unique repositories..."
       - find . -type f | awk -F'/' '{print $2}' | sort -u > repo_names.txt
+      - echo "Unique Repositories Found:"
       - cat repo_names.txt
+
+      - echo "Extracting affected directories..."
+      - find . -type f | awk -F'/' '{print $1"/"$2}' | sort -u > affected_dirs.txt
+      - echo "Affected Directories:"
+      - cat affected_dirs.txt
 
   build:
     commands:
+      - echo "==================== BUILD PHASE ===================="
       - echo "No Lambda updates for now. Just verifying repo detection."
+      - echo "Debugging environment variables..."
+      - env | sort
 
   post_build:
     commands:
+      - echo "==================== POST-BUILD PHASE ===================="
       - echo "Build completed successfully!"
