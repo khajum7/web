@@ -15,7 +15,6 @@ phases:
   pre_build:
     commands:
       - echo "Fetching latest changes..."
-      - git fetch origin main  # Fetch the latest commit history (ensure the branch is correct)
       - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')  # Get modified files in one line
       - |
         if [ -z "$CHANGED_FILES" ]; then
