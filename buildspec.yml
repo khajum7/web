@@ -17,7 +17,13 @@ phases:
       - echo "Fetching changed files..."
       - git fetch origin main  # Ensure latest commit history
       - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')  # Get modified files in one line
-      - echo "Modified files: $CHANGED_FILES"
+      - |
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "No files changed. Skipping build.";
+          exit 0;  # Exit early if no files changed
+        else
+          echo "Modified files: $CHANGED_FILES";
+        fi
 
   build:
     commands:
@@ -25,7 +31,7 @@ phases:
       - |
         if [ -z "$CHANGED_FILES" ]; then
           echo "No files changed. Skipping deployment.";
-          exit 0;
+          exit 0;  # Exit early if no files changed
         else
           echo "Zipping only changed files...";
           zip lambda_function.zip $CHANGED_FILES;
