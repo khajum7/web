@@ -8,26 +8,17 @@ phases:
 
   pre_build:
     commands:
-      - echo "Fetching latest commit ID..."
-      - |
-        export COMMIT_ID=$(git rev-parse HEAD)
-        echo "Commit ID: $COMMIT_ID"
-      
-      - echo "Fetching changed files..."
-      - |
-        export CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r $COMMIT_ID)
-        echo "Changed Files:"
-        echo "$CHANGED_FILES"
+      - echo "Fetching commit ID from CodeBuild environment..."
+      - export COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo "Commit ID: $COMMIT_ID"
+
+      - echo "Fetching changed files from CodePipeline..."
+      - ls -R > files_list.txt
+      - cat files_list.txt
 
       - echo "Extracting unique repositories..."
-      - |
-        echo "$CHANGED_FILES" | awk -F'/' '{print $1}' | sort -u > repo_names.txt
-        cat repo_names.txt
-
-      - echo "Extracting affected directories..."
-      - |
-        echo "$CHANGED_FILES" | awk -F'/' '{print $1"/"$2}' | sort -u > affected_dirs.txt
-        cat affected_dirs.txt
+      - find . -type f | awk -F'/' '{print $2}' | sort -u > repo_names.txt
+      - cat repo_names.txt
 
   build:
     commands:
