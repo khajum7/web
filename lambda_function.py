@@ -2,7 +2,7 @@ import json
 
 def lambda_handler(event, context):
     print("event",event)
-    # Retrieve data from the event
+    # Retrieve data from the esdavent
     message = event['messsage']
     
     
