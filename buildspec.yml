@@ -22,12 +22,16 @@ phases:
   build:
     commands:
       - echo "Checking if there are files to update..."
-      - '[ -z "$CHANGED_FILES" ] && echo "No files changed. Skipping deployment." && exit 0 || true'
-      - echo "Zipping only changed files..."
-      - zip lambda_function.zip $CHANGED_FILES
-
-      - echo "Updating Lambda function: $LAMBDA_NAME"
-      - aws lambda update-function-code --function-name "$LAMBDA_NAME" --zip-file fileb://lambda_function.zip
+      - |
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "No files changed. Skipping deployment.";
+          exit 0;
+        else
+          echo "Zipping only changed files...";
+          zip lambda_function.zip $CHANGED_FILES;
+          echo "Updating Lambda function: $LAMBDA_NAME";
+          aws lambda update-function-code --function-name "$LAMBDA_NAME" --zip-file fileb://lambda_function.zip;
+        fi
 
   post_build:
     commands:
