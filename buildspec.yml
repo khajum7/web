@@ -16,7 +16,7 @@ phases:
     commands:
       - echo "Cloning repository..."
       - git clone https://github.com/khajum7/web.git
-      - cd /khajum7/web
+      - ls
       - echo "Fetching changed files..."
       - git fetch origin main  # Ensure latest commit history, replace 'main' with 'master' if needed
       - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')  # Get modified files in one line
