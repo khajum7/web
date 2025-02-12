@@ -16,27 +16,6 @@ phases:
       - export COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo "Commit ID: $COMMIT_ID"
 
-      - echo "Listing all files in the source directory..."
-      - ls -lahR /codebuild/output/src > all_files.txt
-      - cat all_files.txt
-
-      - echo "Fetching changed files..."
-      - git --version
-      - git status
-      - git diff --name-only HEAD~1 > changed_files.txt || echo "No previous commit found, skipping diff."
-      - echo "Changed Files:"
-      - cat changed_files.txt
-
-      - echo "Extracting unique repositories..."
-      - find . -type f | awk -F'/' '{print $2}' | sort -u > repo_names.txt
-      - echo "Unique Repositories Found:"
-      - cat repo_names.txt
-
-      - echo "Extracting affected directories..."
-      - find . -type f | awk -F'/' '{print $1"/"$2}' | sort -u > affected_dirs.txt
-      - echo "Affected Directories:"
-      - cat affected_dirs.txt
-
   build:
     commands:
       - echo "==================== BUILD PHASE ===================="
