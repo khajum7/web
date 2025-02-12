@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    LAMBDA_NAME: "Testing_CICD"  # Set in CodeBuild environment
+    LAMBDA_NAME: "Testing_CICD"
 
 phases:
   install:
@@ -14,35 +14,25 @@ phases:
 
   pre_build:
     commands:
-      - echo "Fetching latest changes..."
-      - echo "Current directory: $(pwd)"  # Show the current directory to ensure we're in the right location
-      - echo "Listing files in the current directory..."
-      - ls -la  # List the files to check if the Git repo files exist
-      - COMMIT_ID=$(git rev-parse HEAD)  # Get the latest commit ID
-      - echo "Latest commit ID: $COMMIT_ID"
-      - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')  # Get modified files in one line
-      - |
-        if [ -z "$CHANGED_FILES" ]; then
-          echo "No files changed. Skipping build.";
-          exit 0;  # Exit early if no files changed
-        else
-          echo "Modified files: $CHANGED_FILES";
-        fi
+      - echo "Fetching commit ID..."
+      - echo "Commit ID: $CODEBUILD_RESOLVED_SOURCE_VERSION"
 
   build:
     commands:
       - echo "Checking if there are files to update..."
+      - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')
       - |
         if [ -z "$CHANGED_FILES" ]; then
-          echo "No files changed. Skipping deployment.";
-          exit 0;  # Exit early if no files changed
+          echo "No files changed. Skipping deployment."
+          exit 0
         else
-          echo "Zipping only changed files...";
-          zip lambda_function.zip $CHANGED_FILES;
-          echo "Updating Lambda function: $LAMBDA_NAME";
-          aws lambda update-function-code --function-name "$LAMBDA_NAME" --zip-file fileb://lambda_function.zip;
+          echo "Zipping only changed files..."
+          zip lambda_function.zip $CHANGED_FILES
+          echo "Updating Lambda function: $LAMBDA_NAME"
+          aws lambda update-function-code --function-name "$LAMBDA_NAME" --zip-file fileb://lambda_function.zip
         fi
 
   post_build:
     commands:
       - echo "Lambda function $LAMBDA_NAME updated successfully!"
+      - echo "Deployed commit ID: $CODEBUILD_RESOLVED_SOURCE_VERSION"
