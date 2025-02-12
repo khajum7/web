@@ -14,11 +14,8 @@ phases:
 
   pre_build:
     commands:
-      - echo "Cloning repository..."
-      - git clone https://github.com/khajum7/web.git
-      - ls
-      - echo "Fetching changed files..."
-      - git fetch origin main  # Ensure latest commit history, replace 'main' with 'master' if needed
+      - echo "Fetching latest changes..."
+      - git fetch origin main  # Fetch the latest commit history (ensure the branch is correct)
       - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')  # Get modified files in one line
       - |
         if [ -z "$CHANGED_FILES" ]; then
@@ -27,7 +24,6 @@ phases:
         else
           echo "Modified files: $CHANGED_FILES";
         fi
-
 
   build:
     commands:
