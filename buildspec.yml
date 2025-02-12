@@ -15,7 +15,11 @@ phases:
   pre_build:
     commands:
       - echo "Fetching latest changes..."
-      - COMMIT_ID=$(git rev-parse HEAD)
+      - echo "Current directory: $(pwd)"  # Show the current directory to ensure we're in the right location
+      - echo "Listing files in the current directory..."
+      - ls -la  # List the files to check if the Git repo files exist
+      - COMMIT_ID=$(git rev-parse HEAD)  # Get the latest commit ID
+      - echo "Latest commit ID: $COMMIT_ID"
       - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')  # Get modified files in one line
       - |
         if [ -z "$CHANGED_FILES" ]; then
