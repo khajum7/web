@@ -2,27 +2,31 @@ version: 0.2
 
 env:
   variables:
-    LAMBDA_NAME: "Testing_CICD"  # Change this or set in CodeBuild environment
+    LAMBDA_NAME: "Testing_CICD"  # Set in CodeBuild environment
 
 phases:
   install:
     runtime-versions:
       python: 3.9
     commands:
-      - echo "Installing dependencies..."
+      - echo "Installing AWS CLI..."
+      - pip install --upgrade awscli
 
   pre_build:
     commands:
-      - echo "Checking for updates in GitHub repository..."
-      - echo "Latest commit: $COMMIT_ID"
+      - echo "Fetching changed files..."
+      - git fetch origin main  # Ensure we have the latest commit history
+      - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)  # Get modified files
+      - echo "Modified files: $CHANGED_FILES"
 
   build:
     commands:
-      - echo "Zipping source files..."
-      - zip -r lambda_function.zip . -x "*.git*" "README.md" "buildspec.yml"
-      
+      - if [ -z "$CHANGED_FILES" ]; then echo "No files changed. Skipping deployment."; exit 0; fi
+      - echo "Zipping only changed files..."
+      - zip lambda_function.zip $CHANGED_FILES
+
       - echo "Updating Lambda function: $LAMBDA_NAME"
-      - aws lambda update-function-code --function-name $LAMBDA_NAME --zip-file fileb://lambda_function.zip
+      - aws lambda update-function-code --function-name "$LAMBDA_NAME" --zip-file fileb://lambda_function.zip
 
   post_build:
     commands:
