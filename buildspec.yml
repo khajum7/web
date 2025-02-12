@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    LAMBDA_NAME: "your-lambda-function-name"  # Change this or set in CodeBuild environment
+    LAMBDA_NAME: "Testing_CICD"  # Change this or set in CodeBuild environment
 
 phases:
   install:
@@ -10,12 +10,10 @@ phases:
       python: 3.9
     commands:
       - echo "Installing dependencies..."
-      - pip install --upgrade awscli
 
   pre_build:
     commands:
       - echo "Checking for updates in GitHub repository..."
-      - COMMIT_ID=$(git rev-parse --short HEAD)
       - echo "Latest commit: $COMMIT_ID"
 
   build:
