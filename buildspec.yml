@@ -15,6 +15,7 @@ phases:
   pre_build:
     commands:
       - echo "Fetching latest changes..."
+      - COMMIT_ID=$(git rev-parse HEAD)
       - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')  # Get modified files in one line
       - |
         if [ -z "$CHANGED_FILES" ]; then
