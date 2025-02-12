@@ -1,38 +1,31 @@
 version: 0.2
 
+env:
+  variables:
+    LAMBDA_NAME: "your-lambda-function-name"  # Change this or set in CodeBuild environment
+
 phases:
   install:
+    runtime-versions:
+      python: 3.9
     commands:
-      - echo "==================== INSTALL PHASE ===================="
-      - echo "Updating system and installing dependencies..."
-      - apt-get update && apt-get install -y jq
-      - echo "Installation complete."
+      - echo "Installing dependencies..."
+      - pip install --upgrade awscli
 
   pre_build:
     commands:
-      - echo "==================== PRE-BUILD PHASE ===================="
-      - echo "Fetching commit ID from CodeBuild environment..."
-      - echo "CODEBUILD_RESOLVED_SOURCE_VERSION: $CODEBUILD_RESOLVED_SOURCE_VERSION"
-      - export COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - echo "Commit ID: $COMMIT_ID"
-
-      - echo "Fetching changed files..."
-      - ls -R > files_list.txt
-      - cat files_list.txt
-
-      - echo "Extracting unique repositories..."
-      - find . -type f | awk -F'/' '{print $1}' | sort -u > repo_names.txt
-      - echo "Unique Repositories Found:"
-      - cat repo_names.txt
+      - echo "Checking for updates in GitHub repository..."
+      - COMMIT_ID=$(git rev-parse --short HEAD)
+      - echo "Latest commit: $COMMIT_ID"
 
   build:
     commands:
-      - echo "==================== BUILD PHASE ===================="
-      - echo "No Lambda updates for now. Just verifying repo detection."
-      - echo "Debugging environment variables..."
-      - env | sort
+      - echo "Zipping source files..."
+      - zip -r lambda_function.zip . -x "*.git*" "README.md" "buildspec.yml"
+      
+      - echo "Updating Lambda function: $LAMBDA_NAME"
+      - aws lambda update-function-code --function-name $LAMBDA_NAME --zip-file fileb://lambda_function.zip
 
   post_build:
     commands:
-      - echo "==================== POST-BUILD PHASE ===================="
-      - echo "Build completed successfully!"
+      - echo "Lambda function $LAMBDA_NAME updated successfully!"
