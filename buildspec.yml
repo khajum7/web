@@ -16,6 +16,15 @@ phases:
       - export COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo "Commit ID: $COMMIT_ID"
 
+      - echo "Fetching changed files..."
+      - ls -R > files_list.txt
+      - cat files_list.txt
+
+      - echo "Extracting unique repositories..."
+      - find . -type f | awk -F'/' '{print $1}' | sort -u > repo_names.txt
+      - echo "Unique Repositories Found:"
+      - cat repo_names.txt
+
   build:
     commands:
       - echo "==================== BUILD PHASE ===================="
