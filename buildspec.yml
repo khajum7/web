@@ -1,38 +1,19 @@
 version: 0.2
 
-env:
-  variables:
-    LAMBDA_NAME: "Testing_CICD"
-
 phases:
   install:
     runtime-versions:
       python: 3.9
+  pre_build:
     commands:
       - echo "Installing AWS CLI..."
       - pip install --upgrade awscli
-
-  pre_build:
-    commands:
-      - echo "Fetching commit ID..."
-      - echo "Commit ID: $CODEBUILD_RESOLVED_SOURCE_VERSION"
-
   build:
     commands:
-      - echo "Checking if there are files to update..."
-      - CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')
-      - |
-        if [ -z "$CHANGED_FILES" ]; then
-          echo "No files changed. Skipping deployment."
-          exit 0
-        else
-          echo "Zipping only changed files..."
-          zip lambda_function.zip $CHANGED_FILES
-          echo "Updating Lambda function: $LAMBDA_NAME"
-          aws lambda update-function-code --function-name "$LAMBDA_NAME" --zip-file fileb://lambda_function.zip
-        fi
+      - echo "Running deployment script..."
+      - chmod +x deploy.sh
+      - ./deploy.sh
 
-  post_build:
-    commands:
-      - echo "Lambda function $LAMBDA_NAME updated successfully!"
-      - echo "Deployed commit ID: $CODEBUILD_RESOLVED_SOURCE_VERSION"
+artifacts:
+  files:
+    - lambda_function.zip
