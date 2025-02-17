@@ -4,26 +4,27 @@ echo "===== STARTING LAMBDA DEPLOYMENT ====="
 
 # Variables
 LAMBDA_FUNCTION_NAME="Testing-CICD"
-
-# Get repository name from Git
 REPO_NAME=$(basename `git rev-parse --show-toplevel`)
-
-# Get commit ID
 COMMIT_ID=$(git rev-parse --short HEAD)
-
-# Create dynamic zip filename
 ZIP_FILE="${REPO_NAME}_${COMMIT_ID}.zip"
 
 echo "Repository Name: $REPO_NAME"
 echo "Commit ID: $COMMIT_ID"
 echo "Zip File Name: $ZIP_FILE"
 
-echo "Current Directory: $(pwd)"
-echo "Listing Files:"
-ls -la
+echo "Getting modified files..."
+MODIFIED_FILES=$(git diff --name-only HEAD~1 HEAD)
 
-echo "Zipping Lambda function..."
-zip -r "$ZIP_FILE" . 
+if [ -z "$MODIFIED_FILES" ]; then
+    echo "No changes detected. Skipping deployment."
+    exit 0
+fi
+
+echo "Modified Files:"
+echo "$MODIFIED_FILES"
+
+echo "Zipping only modified files..."
+zip -r "$ZIP_FILE" $MODIFIED_FILES
 
 echo "Verifying Zip File..."
 ls -lh "$ZIP_FILE"
