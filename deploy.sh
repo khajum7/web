@@ -6,14 +6,14 @@ LAMBDA_FUNCTION_NAME="Testing-CICD"
 ZIP_FILE="lambda_$(date +%Y%m%d_%H%M%S).zip"
 echo "Zip File Name: $ZIP_FILE"
 
-# Define a sync directory (previously deployed files)
+# Define sync directory (previously deployed files)
 SYNC_DIR="/tmp/lambda_previous"
 
 # Ensure the directory exists
 mkdir -p "$SYNC_DIR"
 
-# Get list of modified files
-MODIFIED_FILES=$(rsync -av --dry-run --out-format="%n" . "$SYNC_DIR" | tail -n +2 | grep -v '/$')
+# Get list of modified files compared to last sync
+MODIFIED_FILES=$(rsync -rc --out-format="%n" --dry-run . "$SYNC_DIR" | grep -v '/$')
 
 # Check if any files were modified
 if [ -z "$MODIFIED_FILES" ]; then
@@ -24,16 +24,20 @@ fi
 echo "Modified files:"
 echo "$MODIFIED_FILES"
 
-# Copy only modified files to a temp directory
+# Create a temporary directory for updated files
 TMP_DIR="/tmp/lambda_update"
+rm -rf "$TMP_DIR"
 mkdir -p "$TMP_DIR"
 
-echo "$MODIFIED_FILES" | while read FILE; do
-    mkdir -p "$TMP_DIR/$(dirname "$FILE")"
-    cp "$FILE" "$TMP_DIR/$FILE"
-done
+# Copy only updated files to the temp directory
+while read -r FILE; do
+    if [ -f "$FILE" ]; then
+        mkdir -p "$TMP_DIR/$(dirname "$FILE")"
+        cp "$FILE" "$TMP_DIR/$FILE"
+    fi
+done <<< "$MODIFIED_FILES"
 
-# Zip only the modified files
+# Zip only modified files
 cd "$TMP_DIR" || exit 1
 zip -r "../$ZIP_FILE" .
 
@@ -43,5 +47,8 @@ ls -lh "../$ZIP_FILE"
 # Deploy to Lambda
 cd ..
 aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --zip-file "fileb://$ZIP_FILE"
+
+# Sync the latest version to prevent unnecessary re-deployments
+rsync -rc . "$SYNC_DIR"
 
 echo "===== DEPLOYMENT COMPLETED ====="
