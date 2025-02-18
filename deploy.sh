@@ -6,18 +6,15 @@ LAMBDA_FUNCTION_NAME="Testing-CICD"
 ZIP_FILE="lambda_$(date +%Y%m%d_%H%M%S).zip"
 echo "Zip File Name: $ZIP_FILE"
 
-# Define sync directory (previously deployed files)
-SYNC_DIR="/tmp/lambda_previous"
+# Define time range (e.g., files modified in the last 10 minutes)
+TIME_RANGE="-10m"
 
-# Ensure the sync directory exists
-mkdir -p "$SYNC_DIR"
-
-# Find files that were modified in the last commit (Git must be installed)
-MODIFIED_FILES=$(git diff --name-only HEAD~1)
+# Find modified files in the last X minutes
+MODIFIED_FILES=$(find . -type f -mmin $TIME_RANGE)
 
 # Check if any files were modified
 if [ -z "$MODIFIED_FILES" ]; then
-    echo "No files changed. Skipping deployment."
+    echo "No files changed recently. Skipping deployment."
     exit 0
 fi
 
