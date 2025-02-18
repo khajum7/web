@@ -9,11 +9,11 @@ echo "Zip File Name: $ZIP_FILE"
 # Define sync directory (previously deployed files)
 SYNC_DIR="/tmp/lambda_previous"
 
-# Ensure the directory exists
+# Ensure the sync directory exists
 mkdir -p "$SYNC_DIR"
 
-# Get list of modified files compared to last sync (excluding directories)
-MODIFIED_FILES=$(rsync -rc --dry-run --out-format="%n" . "$SYNC_DIR" | grep -v '/$')
+# Find files that were modified in the last commit (Git must be installed)
+MODIFIED_FILES=$(git diff --name-only HEAD~1)
 
 # Check if any files were modified
 if [ -z "$MODIFIED_FILES" ]; then
@@ -53,8 +53,5 @@ ls -lh "../$ZIP_FILE"
 # Deploy to Lambda
 cd ..
 aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --zip-file "fileb://$ZIP_FILE"
-
-# Sync the latest version to prevent unnecessary re-deployments
-rsync -rc . "$SYNC_DIR"
 
 echo "===== DEPLOYMENT COMPLETED ====="
