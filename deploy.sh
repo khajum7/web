@@ -12,8 +12,8 @@ SYNC_DIR="/tmp/lambda_previous"
 # Ensure the directory exists
 mkdir -p "$SYNC_DIR"
 
-# Get list of modified files compared to last sync
-MODIFIED_FILES=$(rsync -rc --out-format="%n" --dry-run . "$SYNC_DIR" | grep -v '/$')
+# Get list of modified files compared to last sync (excluding directories)
+MODIFIED_FILES=$(rsync -rc --dry-run --out-format="%n" . "$SYNC_DIR" | grep -v '/$')
 
 # Check if any files were modified
 if [ -z "$MODIFIED_FILES" ]; then
@@ -36,6 +36,12 @@ while read -r FILE; do
         cp "$FILE" "$TMP_DIR/$FILE"
     fi
 done <<< "$MODIFIED_FILES"
+
+# Ensure there are files to zip
+if [ -z "$(ls -A "$TMP_DIR")" ]; then
+    echo "No actual file changes detected. Skipping deployment."
+    exit 0
+fi
 
 # Zip only modified files
 cd "$TMP_DIR" || exit 1
