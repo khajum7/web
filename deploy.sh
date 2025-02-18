@@ -6,11 +6,11 @@ LAMBDA_FUNCTION_NAME="Testing-CICD"
 ZIP_FILE="lambda_$(date +%Y%m%d_%H%M%S).zip"
 echo "Zip File Name: $ZIP_FILE"
 
-# Define time range (e.g., files modified in the last 10 minutes)
-TIME_RANGE="-10m"
+# Set the time range (last 10 minutes)
+TIME_THRESHOLD=$(date -d "10 minutes ago" +%Y-%m-%dT%H:%M:%S)
 
-# Find modified files in the last X minutes
-MODIFIED_FILES=$(find . -type f -mmin $TIME_RANGE)
+# Find modified files based on timestamp
+MODIFIED_FILES=$(find . -type f -newermt "$TIME_THRESHOLD")
 
 # Check if any files were modified
 if [ -z "$MODIFIED_FILES" ]; then
