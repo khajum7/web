@@ -6,7 +6,7 @@ def lambda_handler(event, context):
     message = event['measssage']
     sdaf
     dasgh
-    g
+    gdfgfds
 
     dsa
     # Process the message
