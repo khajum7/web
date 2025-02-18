@@ -6,6 +6,7 @@ def lambda_handler(event, context):
     message = event['measssage']
     sdaf
     das
+    g
     
     # Process the message
     processed_message = message.upper()
