@@ -5,7 +5,7 @@ def lambda_handler(event, context):
     # Retrieve data from test the esdavent
     message = event['measssage']
     sdaf
-    
+    das
     
     # Process the message
     processed_message = message.upper()
