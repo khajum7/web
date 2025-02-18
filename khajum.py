@@ -1,7 +1,7 @@
 # try.py
 
 def main():
-    print("tesssat")
+    print("this work")
     print("This is the change in code so it should work yes it is")
 
 if __name__ == "__main__":
