@@ -9,7 +9,7 @@ from stcore import pms
 from datetime import datetime  
 
 
-# Email source for sending notifications
+# Email source for sending notifications test
 MAIL_SOURCE = 'notifications@getcultureshock.com'
 
 # Mapping order statuses to email templates and subjects
