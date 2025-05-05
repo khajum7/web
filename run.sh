@@ -3,36 +3,44 @@
 set -e
 
 REGION="us-west-1"
+TMP_HASH_FILE=".lambda_code_hashes"
+
+touch "$TMP_HASH_FILE"
 
 for dir in */; do
   FOLDER_NAME="${dir%/}"
-  ZIP_FILE="${FOLDER_NAME}.zip"
 
   echo "Checking: $FOLDER_NAME"
 
-  # Zip the Lambda function folder
-  cd "$FOLDER_NAME"
-  zip -r "../$ZIP_FILE" . > /dev/null
-  cd ..
+  # Calculate current folder content hash (based on actual files, not ZIP)
+  CONTENT_HASH=$(find "$FOLDER_NAME" -type f -exec sha256sum {} \; | sort | sha256sum | awk '{print $1}')
 
-  # Get remote Lambda code hash
-  if aws lambda get-function --region "$REGION" --function-name "$FOLDER_NAME" > /tmp/lambda_info.json 2>/dev/null; then
-    REMOTE_HASH=$(jq -r .Configuration.CodeSha256 /tmp/lambda_info.json)
-    LOCAL_HASH=$(openssl dgst -sha256 -binary "$ZIP_FILE" | openssl base64)
+  # Get previous hash if exists
+  LAST_HASH=$(grep "^$FOLDER_NAME:" "$TMP_HASH_FILE" | cut -d: -f2)
 
-    if [ "$REMOTE_HASH" != "$LOCAL_HASH" ]; then
-      echo "🔄 Code changed. Updating Lambda: $FOLDER_NAME"
-      aws lambda update-function-code \
-        --region "$REGION" \
-        --function-name "$FOLDER_NAME" \
-        --zip-file "fileb://$ZIP_FILE"
-    else
-      echo "✅ No change for $FOLDER_NAME. Skipping."
-    fi
+  if [ "$CONTENT_HASH" != "$LAST_HASH" ]; then
+    echo "🔄 Detected file change. Preparing to update: $FOLDER_NAME"
+
+    # Zip only if content changed
+    ZIP_FILE="${FOLDER_NAME}.zip"
+    cd "$FOLDER_NAME"
+    zip -r "../$ZIP_FILE" . > /dev/null
+    cd ..
+
+    # Update Lambda function code
+    aws lambda update-function-code \
+      --region "$REGION" \
+      --function-name "$FOLDER_NAME" \
+      --zip-file "fileb://$ZIP_FILE"
+
+    # Update stored hash
+    grep -v "^$FOLDER_NAME:" "$TMP_HASH_FILE" > "$TMP_HASH_FILE.tmp"
+    echo "$FOLDER_NAME:$CONTENT_HASH" >> "$TMP_HASH_FILE.tmp"
+    mv "$TMP_HASH_FILE.tmp" "$TMP_HASH_FILE"
+
+    # Cleanup
+    rm -f "$ZIP_FILE"
   else
-    echo "⚠️ Lambda $FOLDER_NAME not found in $REGION."
+    echo "✅ No change in $FOLDER_NAME. Skipping update."
   fi
-
-  # Cleanup
-  rm -f "$ZIP_FILE"
 done
