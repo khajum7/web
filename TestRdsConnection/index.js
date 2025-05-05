@@ -3,7 +3,7 @@ const AWS = require("aws-sdk");
 let mysql = require('mysql');
 
 const ses = new AWS.SES({
-  region: 'us-east-1'
+  region: 'us-west-1'
 });
 const nodemailer = require("nodemailer");
 
