@@ -4,7 +4,7 @@ from os import getenv
 from stcore import pms
 from datetime import datetime
 
-#test1
+#test 
 
 #This function is called when a new message is received from sns on lambda handler and then this function will call construct_message_showroom function to store the eventtype of SES message.
 def construct_message_showroom(message, wcnx):
