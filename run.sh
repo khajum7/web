@@ -1,48 +1,36 @@
 #!/bin/bash
 
-set -e  # Exit on any command failure
-set -x  # Print each command before executing
+set -e
 
-echo "Starting full Lambda update process..."
+REGION="us-west-1"
+FOLDER_NAME="$1"
 
-REGION="us-west-1"  # Set your region
+if [ -z "$FOLDER_NAME" ]; then
+  echo "Usage: $0 <lambda_folder_name>"
+  exit 1
+fi
 
-find . -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' -printf '%f\n' | while read FOLDER; do
-  echo "-----------------------------"
-  echo "Processing folder: $FOLDER"
-  
-  ZIP_FILE="${FOLDER}.zip"
+ZIP_FILE="${FOLDER_NAME}.zip"
 
-  # Remove existing zip if any
-  rm -f "$ZIP_FILE"
+# Create ZIP
+cd "$FOLDER_NAME"
+zip -r "../$ZIP_FILE" . > /dev/null
+cd ..
 
-  # Zip contents
-  (cd "$FOLDER" && zip -r "../${ZIP_FILE}" .)
+# Check if Lambda function exists
+if aws lambda get-function --region "$REGION" --function-name "$FOLDER_NAME" > /tmp/lambda_info.json 2>/dev/null; then
+  REMOTE_HASH=$(jq -r .Configuration.CodeSha256 /tmp/lambda_info.json)
+  LOCAL_HASH=$(openssl dgst -sha256 -binary "$ZIP_FILE" | openssl base64)
 
-  # Check if Lambda function exists
-  echo "Checking if Lambda function '$FOLDER' exists..."
-  if aws lambda get-function --region "$REGION" --function-name "$FOLDER" > /tmp/lambda_info.json 2>/dev/null; then
-    echo "Lambda found. Checking for code changes..."
-
-    # Get current remote Lambda code hash
-    REMOTE_HASH=$(jq -r '.Configuration.CodeSha256' /tmp/lambda_info.json)
-
-    # Get local zip file's base64-encoded SHA-256 hash
-    LOCAL_HASH=$(openssl dgst -sha256 -binary "$ZIP_FILE" | openssl base64)
-
-    if [ "$REMOTE_HASH" == "$LOCAL_HASH" ]; then
-      echo "⚠️  No changes detected for '$FOLDER'. Skipping update."
-    else
-      echo "🔄 Changes detected. Updating '$FOLDER'..."
-      aws lambda update-function-code \
-        --region "$REGION" \
-        --function-name "$FOLDER" \
-        --zip-file "fileb://${ZIP_FILE}"
-      echo "✅ Updated Lambda: $FOLDER"
-    fi
+  if [ "$REMOTE_HASH" != "$LOCAL_HASH" ]; then
+    echo "Code changed. Updating Lambda: $FOLDER_NAME"
+    aws lambda update-function-code \
+      --region "$REGION" \
+      --function-name "$FOLDER_NAME" \
+      --zip-file "fileb://$ZIP_FILE"
   else
-    echo "❌ Lambda '$FOLDER' not found in region '$REGION' - skipping"
+    echo "No code change for $FOLDER_NAME. Skipping update."
   fi
-done
-
-echo "Update process completed ✅"
+else
+  echo "Lambda function $FOLDER_NAME not found in region $REGION."
+fi
