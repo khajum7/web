@@ -10,21 +10,22 @@ phases:
       - echo "Changed folders: $CHANGED_FOLDERS"
       
       # Process each changed folder
-      - for FOLDER in $CHANGED_FOLDERS; do
-          echo "Processing folder: $FOLDER";
+      - |
+        for FOLDER in $CHANGED_FOLDERS; do
+          echo "Processing folder: $FOLDER"
           
           # Verify folder exists
           if [ -d "$FOLDER" ]; then
             # Zip contents directly
-            (cd "$FOLDER" && zip -r "../${FOLDER}.zip" .);
+            (cd "$FOLDER" && zip -r "../${FOLDER}.zip" .)
             
-            # Update Lambda (suppress errors if function doesn't exist)
-            echo "Updating Lambda: $FOLDER";
+            # Update Lambda
+            echo "Updating Lambda: $FOLDER"
             aws lambda update-function-code \
               --function-name "$FOLDER" \
               --zip-file "fileb://${FOLDER}.zip" || \
-              echo "Warning: Lambda function $FOLDER not updated (may not exist)";
+              echo "Warning: Lambda function $FOLDER not updated (may not exist)"
           else
-            echo "Skipping: $FOLDER is not a directory";
-          fi;
+            echo "Skipping: $FOLDER is not a directory"
+          fi
         done
