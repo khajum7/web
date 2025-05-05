@@ -2,7 +2,7 @@ import json
 import os
 from stcore import pms
 
-#test123
+#test1234
 def update_status(wcnx, trigger_source, user_attrs):
     try:
         sql = """
