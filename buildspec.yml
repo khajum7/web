@@ -1,19 +1,30 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      python: 3.9
   pre_build:
     commands:
-      - echo "Installing AWS CLI..."
-      - pip install --upgrade awscli
+      - echo Detecting changed folders...
+      - git diff --name-only $CODEBUILD_RESOLVED_SOURCE_VERSION^ $CODEBUILD_RESOLVED_SOURCE_VERSION > changed_files.txt
+      - cat changed_files.txt
+      - |
+        # Extract top-level folders with changes
+        export CHANGED_DIRS=$(cut -d/ -f1 changed_files.txt | sort | uniq)
+        echo "Detected changed folders: $CHANGED_DIRS"
+
   build:
     commands:
-      - echo "Running deployment script..."
-      - chmod +x deploy.sh
-      - ./deploy.sh
+      - for DIR in $CHANGED_DIRS; do
+          echo "Packaging and deploying $DIR...";
+          if [ -d "$DIR" ]; then
+            cd $DIR;
+            zip -r ../${DIR}.zip .;
+            cd ..;
+            aws lambda update-function-code --function-name $DIR --zip-file fileb://${DIR}.zip;
+          else
+            echo "Directory $DIR not found, skipping.";
+          fi
+        done
 
 artifacts:
   files:
-    - lambda_function.zip
+    - changed_files.txt
