@@ -2,14 +2,15 @@ version: 0.2
 
 phases:
   pre_build:
-    commands:
-      - echo Detecting changed folders...
-      - git diff --name-only $CODEBUILD_RESOLVED_SOURCE_VERSION^ $CODEBUILD_RESOLVED_SOURCE_VERSION > changed_files.txt
-      - cat changed_files.txt
-      - |
-        # Extract top-level folders with changes
-        export CHANGED_DIRS=$(cut -d/ -f1 changed_files.txt | sort | uniq)
-        echo "Detected changed folders: $CHANGED_DIRS"
+  commands:
+    - echo Detecting changed folders...
+    - git fetch --unshallow || true
+    - git diff --name-only HEAD~1 > changed_files.txt || echo "" > changed_files.txt
+    - cat changed_files.txt
+    - |
+      export CHANGED_DIRS=$(cut -d/ -f1 changed_files.txt | sort | uniq)
+      echo "Detected changed folders: $CHANGED_DIRS"
+
 
   build:
     commands:
