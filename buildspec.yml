@@ -3,17 +3,11 @@ version: 0.2
 phases:
   build:
     commands:
-      - CHANGED_FOLDER=$(git diff --name-only HEAD^ HEAD | cut -d'/' -f1 | uniq)
-      - echo "Updating Lambda: $CHANGED_FOLDER"
-      - cd "$CHANGED_FOLDER" && zip -r "../$CHANGED_FOLDER.zip" .
+      - echo "Detecting changed folder..."
+      - CHANGED_FOLDER=$(git diff --name-only HEAD^ HEAD | cut -d'/' -f1 | sort | uniq | head -n 1)
+      - echo "Changed folder: $CHANGED_FOLDER"
+      - cd "$CHANGED_FOLDER"
+      - zip -r "../$CHANGED_FOLDER.zip" .
       - cd ..
+      - echo "Updating Lambda function: $CHANGED_FOLDER"
       - aws lambda update-function-code --function-name "$CHANGED_FOLDER" --zip-file "fileb://$CHANGED_FOLDER.zip"
-
-      # Zip the folder
-      - cd "$CHANGED_FOLDER" && zip -r "../$CHANGED_FOLDER.zip" .
-      - cd ..
-
-      # Update Lambda (function name = folder name)
-      - aws lambda update-function-code \
-          --function-name "$CHANGED_FOLDER" \
-          --zip-file "fileb://$CHANGED_FOLDER.zip"
