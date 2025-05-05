@@ -1,0 +1,29 @@
+#!/bin/bash
+
+echo "Starting Lambda update process..."
+
+# Get all changed folders
+CHANGED_FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d'/' -f1 | sort | uniq)
+echo "Changed folders: $CHANGED_FOLDERS"
+
+# Process each changed folder
+for FOLDER in $CHANGED_FOLDERS; do
+  echo "Processing folder: $FOLDER"
+  
+  # Verify folder exists
+  if [ -d "$FOLDER" ]; then
+    # Zip contents directly
+    (cd "$FOLDER" && zip -r "../${FOLDER}.zip" .)
+    
+    # Update Lambda
+    echo "Updating Lambda: $FOLDER"
+    aws lambda update-function-code \
+      --function-name "$FOLDER" \
+      --zip-file "fileb://${FOLDER}.zip" || \
+      echo "Warning: Lambda function $FOLDER not updated (may not exist)"
+  else
+    echo "Skipping: $FOLDER is not a directory"
+  fi
+done
+
+echo "Update process completed"
