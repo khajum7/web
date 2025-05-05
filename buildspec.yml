@@ -1,30 +1,17 @@
 version: 0.2
 
 phases:
-  pre_build:
-    commands:
-      - echo Detecting changed folders...
-      - git fetch --unshallow || true
-      - git diff --name-only HEAD~1 > changed_files.txt || echo "" > changed_files.txt
-      - cat changed_files.txt
-      - |
-        export CHANGED_DIRS=$(cut -d/ -f1 changed_files.txt | sort | uniq)
-        echo "Detected changed folders: $CHANGED_DIRS"
-
   build:
     commands:
-      - for DIR in $CHANGED_DIRS; do
-          echo "Packaging and deploying $DIR...";
-          if [ -d "$DIR" ]; then
-            cd $DIR;
-            zip -r ../${DIR}.zip .;
-            cd ..;
-            aws lambda update-function-code --function-name $DIR --zip-file fileb://${DIR}.zip;
-          else
-            echo "Directory $DIR not found, skipping.";
-          fi
-        done
+      # Get the changed folder name (assuming one folder per commit)
+      - CHANGED_FOLDER=$(git diff --name-only HEAD^ HEAD | cut -d'/' -f1 | uniq)
+      - echo "Updating Lambda: $CHANGED_FOLDER"
 
-artifacts:
-  files:
-    - changed_files.txt
+      # Zip the folder
+      - cd "$CHANGED_FOLDER" && zip -r "../$CHANGED_FOLDER.zip" .
+      - cd ..
+
+      # Update Lambda (function name = folder name)
+      - aws lambda update-function-code \
+          --function-name "$CHANGED_FOLDER" \
+          --zip-file "fileb://$CHANGED_FOLDER.zip"
