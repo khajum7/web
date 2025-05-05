@@ -3,11 +3,28 @@ version: 0.2
 phases:
   build:
     commands:
-      - echo "Detecting changed folder..."
-      - CHANGED_FOLDER=$(git diff --name-only HEAD^ HEAD | cut -d'/' -f1 | sort | uniq | head -n 1)
-      - echo "Changed folder: $CHANGED_FOLDER"
-      - cd "$CHANGED_FOLDER"
-      - zip -r "../$CHANGED_FOLDER.zip" .
-      - cd ..
-      - echo "Updating Lambda function: $CHANGED_FOLDER"
-      - aws lambda update-function-code --function-name "$CHANGED_FOLDER" --zip-file "fileb://$CHANGED_FOLDER.zip"
+      - echo "Starting direct file copy to Lambda..."
+      
+      # Get all changed folders
+      - CHANGED_FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d'/' -f1 | sort | uniq)
+      - echo "Changed folders: $CHANGED_FOLDERS"
+      
+      # Process each changed folder
+      - for FOLDER in $CHANGED_FOLDERS; do
+          echo "Processing folder: $FOLDER";
+          
+          # Verify folder exists
+          if [ -d "$FOLDER" ]; then
+            # Zip contents directly
+            (cd "$FOLDER" && zip -r "../${FOLDER}.zip" .);
+            
+            # Update Lambda (suppress errors if function doesn't exist)
+            echo "Updating Lambda: $FOLDER";
+            aws lambda update-function-code \
+              --function-name "$FOLDER" \
+              --zip-file "fileb://${FOLDER}.zip" || \
+              echo "Warning: Lambda function $FOLDER not updated (may not exist)";
+          else
+            echo "Skipping: $FOLDER is not a directory";
+          fi;
+        done
