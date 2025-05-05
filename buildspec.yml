@@ -3,7 +3,7 @@ version: 0.2
 phases:
   build:
     commands:
-      # Get the changed folder name (assuming one folder per commit)
+      # Get the changed folder name (assuming one folder per commit) 
       - CHANGED_FOLDER=$(git diff --name-only HEAD^ HEAD | cut -d'/' -f1 | uniq)
       - echo "Updating Lambda: $CHANGED_FOLDER"
 
