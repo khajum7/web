@@ -27,20 +27,20 @@ for dir in */; do
     zip -r "../$ZIP_FILE" . > /dev/null
     cd ..
 
-    # Update Lambda function code
-    aws lambda update-function-code \
-      --region "$REGION" \
-      --function-name "$FOLDER_NAME" \
-      --zip-file "fileb://$ZIP_FILE"
+    if aws lambda update-function-code \
+  --region "$REGION" \
+  --function-name "$FOLDER_NAME" \
+  --zip-file "fileb://$ZIP_FILE"; then
 
-    # Update stored hash
-    grep -v "^$FOLDER_NAME:" "$TMP_HASH_FILE" > "$TMP_HASH_FILE.tmp"
-    echo "$FOLDER_NAME:$CONTENT_HASH" >> "$TMP_HASH_FILE.tmp"
-    mv "$TMP_HASH_FILE.tmp" "$TMP_HASH_FILE"
+  # Update stored hash only if upload succeeded
+  grep -v "^$FOLDER_NAME:" "$TMP_HASH_FILE" > "$TMP_HASH_FILE.tmp"
+  echo "$FOLDER_NAME:$CONTENT_HASH" >> "$TMP_HASH_FILE.tmp"
+  mv "$TMP_HASH_FILE.tmp" "$TMP_HASH_FILE"
 
-    # Cleanup
-    rm -f "$ZIP_FILE"
-  else
-    echo "✅ No change in $FOLDER_NAME. Skipping update."
-  fi
-done
+  # Cleanup
+  rm -f "$ZIP_FILE"
+
+else
+  echo "❌ Failed to update Lambda: $FOLDER_NAME"
+  exit 1
+fi
