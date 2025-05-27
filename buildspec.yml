@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   secrets-manager:
-    GITHUB_TOKEN: your-secret-id:GITHUB_TOKEN  # 🔒 Only secret you provide
+    GITHUB_TOKEN: your-secret-id:GITHUB_TOKEN  # You just provide this
 
 phases:
   install:
@@ -11,38 +11,44 @@ phases:
 
   pre_build:
     commands:
-      - echo "🔎 Deriving repo owner, name and PR number…"
-      - REPO_URL="${CODEBUILD_SOURCE_REPO_URL:-$(git config --get remote.origin.url)}"
-      - echo "Repo URL: $REPO_URL"
-      - REPO_PATH=${REPO_URL#*github.com[:/]}
-      - REPO_PATH=${REPO_PATH%.git}
-      - REPO_OWNER=$(echo "$REPO_PATH" | cut -d/ -f1)
-      - REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
+      - echo "Extracting GitHub repo info..."
       - |
+        REPO_URL=$(git config --get remote.origin.url || echo "$CODEBUILD_SOURCE_REPO_URL")
+        echo "Repo URL: $REPO_URL"
+        REPO_PATH=${REPO_URL#*github.com[:/]}
+        REPO_PATH=${REPO_PATH%.git}
+        export REPO_OWNER=$(echo "$REPO_PATH" | cut -d/ -f1)
+        export REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
+        echo "Repo Owner: $REPO_OWNER"
+        echo "Repo Name: $REPO_NAME"
         if [[ "$CODEBUILD_SOURCE_VERSION" =~ ^pr/([0-9]+)$ ]]; then
-          PR_NUMBER="${BASH_REMATCH[1]}"
+          export PR_NUMBER="${BASH_REMATCH[1]}"
+          echo "Detected PR number: $PR_NUMBER"
+        else
+          echo "No PR number detected."
         fi
-      - echo "Owner: $REPO_OWNER  Repo: $REPO_NAME  PR: ${PR_NUMBER:-none}"
 
   build:
     commands:
-      - echo "🧪 Checking syntax for khajum.py…"
+      - echo "Running syntax check on khajum.py..."
       - |
         if ! python -m py_compile khajum.py; then
-          echo "Syntax error in khajum.py!"
+          echo "❌ Syntax check failed!"
           export CODEBUILD_BUILD_SUCCEEDING=0
+        else
+          echo "✅ Syntax OK"
         fi
 
   post_build:
     commands:
       - |
         if [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ] && [ -n "$PR_NUMBER" ]; then
-          echo "❌ Build failed – closing PR #$PR_NUMBER"
+          echo "❌ Build failed – Closing PR #$PR_NUMBER"
           curl -s -X PATCH \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls/${PR_NUMBER}" \
             -d '{"state":"closed"}'
         else
-          echo "✅ Build passed – no action needed."
+          echo "✅ Build passed – no PR changes needed."
         fi
