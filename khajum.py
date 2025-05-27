@@ -1,8 +1,9 @@
 # try.py
 
 def main():
-    print("Lambda cicd testing")
-    print("This is the change in code so it should work yes no")
+    print("this works")
+    print("This is the change in code so it should work yes it is"
 
 if __name__ == "__main__":
     main()
+
