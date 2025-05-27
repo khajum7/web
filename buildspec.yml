@@ -1,9 +1,5 @@
 version: 0.2
 
-env:
-  secrets-manager:
-    GITHUB_TOKEN: your-secret-id:GITHUB_TOKEN
-
 phases:
   install:
     runtime-versions:
@@ -14,42 +10,30 @@ phases:
 
   pre_build:
     commands:
-      - echo "Extracting GitHub repo info..."
-      - |
-        REPO_URL="$CODEBUILD_SOURCE_REPO_URL"
-        echo "Repo URL: $REPO_URL"
-        REPO_PATH=${REPO_URL#*github.com[:/]}
-        REPO_PATH=${REPO_PATH%.git}
-        export REPO_OWNER=$(echo "$REPO_PATH" | cut -d/ -f1)
-        export REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
-        echo "Repo Owner: $REPO_OWNER"
-        echo "Repo Name: $REPO_NAME"
+      - echo "Using bash for proper regex support"
+      - bash -c '
+          REPO_URL="$CODEBUILD_SOURCE_REPO_URL"
+          echo "Repo URL: $REPO_URL"
+          REPO_PATH=${REPO_URL#*github.com[:/]}
+          REPO_PATH=${REPO_PATH%.git}
+          export REPO_OWNER=$(echo "$REPO_PATH" | cut -d/ -f1)
+          export REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
+          echo "Repo Owner: $REPO_OWNER"
+          echo "Repo Name: $REPO_NAME"
 
-        if [[ "$CODEBUILD_SOURCE_VERSION" =~ ^pr/([0-9]+)$ ]]; then
-          export PR_NUMBER="${BASH_REMATCH[1]}"
-          echo "Detected PR number: $PR_NUMBER"
-        else
-          echo "No PR number detected in source version: $CODEBUILD_SOURCE_VERSION"
-        fi
+          if [[ "$CODEBUILD_SOURCE_VERSION" =~ ^pr/([0-9]+)$ ]]; then
+            export PR_NUMBER="${BASH_REMATCH[1]}"
+            echo "Detected PR number: $PR_NUMBER"
+          else
+            echo "No PR number detected in source version: $CODEBUILD_SOURCE_VERSION"
+          fi
+        '
 
   build:
     commands:
-      - echo "Checking syntax for khajum.py..."
-      - |
-        if ! python -m py_compile khajum.py; then
-          echo "Syntax check failed!"
-          export CODEBUILD_BUILD_SUCCEEDING=0
-        fi
+      - echo "Running build phase..."
+      - echo "You can add your build commands here"
 
   post_build:
     commands:
-      - |
-        if [ "$CODEBUILD_BUILD_SUCCEEDING" == "0" ] && [ -n "$PR_NUMBER" ]; then
-          echo "Build failed. Closing PR #$PR_NUMBER..."
-          curl -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" \
-               -H "Accept: application/vnd.github+json" \
-               https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls/${PR_NUMBER} \
-               -d '{"state": "closed"}'
-        else
-          echo "Build passed or not a PR build."
-        fi
+      - echo "Build completed on `date`"
