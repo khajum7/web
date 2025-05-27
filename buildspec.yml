@@ -4,6 +4,6 @@ phases:
   build:
     commands:
       - echo "Checking syntax for try.py..."
-      - python -m py_compile try.py
+      - python -m py_compile khajum.py
       - echo "Syntax check passed. Running try.py..."
       - python khajum.py
