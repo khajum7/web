@@ -1,66 +1,48 @@
 version: 0.2
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1.  SECRETS
-#     – Only the GitHub token is supplied by you.
-# ─────────────────────────────────────────────────────────────────────────────
 env:
   secrets-manager:
-    GITHUB_TOKEN: your-secret-id:GITHUB_TOKEN     # ← your only input
+    GITHUB_TOKEN: your-secret-id:GITHUB_TOKEN  # 🔒 Only secret you provide
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2.  PHASES
-# ─────────────────────────────────────────────────────────────────────────────
 phases:
   install:
     runtime-versions:
       python: 3.11
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # PRE_BUILD – figure out where we are and which PR triggered this job.
-  # ───────────────────────────────────────────────────────────────────────────
   pre_build:
     commands:
       - echo "🔎 Deriving repo owner, name and PR number…"
-
-      # -- Repo URL (works for HTTPS or SSH remotes) --------------------------
       - REPO_URL="${CODEBUILD_SOURCE_REPO_URL:-$(git config --get remote.origin.url)}"
       - echo "Repo URL: $REPO_URL"
-
-      # -- Strip host + .git and split ---------------------------------------
       - REPO_PATH=${REPO_URL#*github.com[:/]}
       - REPO_PATH=${REPO_PATH%.git}
       - REPO_OWNER=$(echo "$REPO_PATH" | cut -d/ -f1)
       - REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
-
-      # -- PR number from webhook ref (e.g. pr/123) --------------------------
       - |
         if [[ "$CODEBUILD_SOURCE_VERSION" =~ ^pr/([0-9]+)$ ]]; then
           PR_NUMBER="${BASH_REMATCH[1]}"
         fi
       - echo "Owner: $REPO_OWNER  Repo: $REPO_NAME  PR: ${PR_NUMBER:-none}"
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # BUILD – run your syntax check
-  # ───────────────────────────────────────────────────────────────────────────
   build:
     commands:
       - echo "🧪 Checking syntax for khajum.py…"
-      - python -m py_compile khajum.py   # ← will exit non-zero on error
+      - |
+        if ! python -m py_compile khajum.py; then
+          echo "Syntax error in khajum.py!"
+          export CODEBUILD_BUILD_SUCCEEDING=0
+        fi
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # POST_BUILD – if the build failed and we have a PR number, close the PR.
-  # ───────────────────────────────────────────────────────────────────────────
   post_build:
     commands:
       - |
         if [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ] && [ -n "$PR_NUMBER" ]; then
           echo "❌ Build failed – closing PR #$PR_NUMBER"
           curl -s -X PATCH \
-               -H "Authorization: Bearer $GITHUB_TOKEN" \
-               -H "Accept: application/vnd.github+json" \
-               "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls/${PR_NUMBER}" \
-               -d '{"state":"closed"}'
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls/${PR_NUMBER}" \
+            -d '{"state":"closed"}'
         else
-          echo "✅ Build passed – nothing to do."
+          echo "✅ Build passed – no action needed."
         fi
