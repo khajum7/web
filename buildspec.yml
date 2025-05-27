@@ -6,4 +6,4 @@ phases:
       - echo "Checking syntax for try.py..."
       - python -m py_compile try.py
       - echo "Syntax check passed. Running try.py..."
-      - python try.py
+      - python khajum.py
