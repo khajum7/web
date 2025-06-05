@@ -34,7 +34,7 @@ while read -r FILE; do
     fi
 done <<< "$MODIFIED_FILES"
 
-# Ensure there are files to zip
+# Ensure there are files to zipp
 if [ -z "$(ls -A "$TMP_DIR")" ]; then
     echo "No actual file changes detected. Skipping deployment."
     exit 0
