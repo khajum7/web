@@ -31,9 +31,13 @@ phases:
 
   build:
     commands:
+
       - echo "Running build phase..."
       - echo "You can add your build commands here"
 
   post_build:
     commands:
       - echo "Build completed on `date`"
+      - chmod +x run.sh  # Make script executable
+      - ./run.sh         # Execute the script
+
