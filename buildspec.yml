@@ -1,7 +1,43 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Installing Python version 3.11 ..."
+      - pyenv global $PYTHON_311_VERSION
+
+  pre_build:
+    commands:
+      - echo "Using bash for proper regex support"
+      - bash -c '
+          REPO_URL="$CODEBUILD_SOURCE_REPO_URL"
+          echo "Repo URL: $REPO_URL"
+          REPO_PATH=${REPO_URL#*github.com[:/]}
+          REPO_PATH=${REPO_PATH%.git}
+          export REPO_OWNER=$(echo "$REPO_PATH" | cut -d/ -f1)
+          export REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
+          echo "Repo Owner: $REPO_OWNER"
+          echo "Repo Name: $REPO_NAME"
+
+          if [[ "$CODEBUILD_SOURCE_VERSION" =~ ^pr/([0-9]+)$ ]]; then
+            export PR_NUMBER="${BASH_REMATCH[1]}"
+            echo "Detected PR number: $PR_NUMBER"
+          else
+            echo "No PR number detected in source version: $CODEBUILD_SOURCE_VERSION"
+          fi
+        '
+
   build:
     commands:
+
+      - echo "Running build phase..."
+      - echo "You can add your build commands here"
+
+  post_build:
+    commands:
+      - echo "Build completed on `date`"
       - chmod +x run.sh  # Make script executable
       - ./run.sh         # Execute the script
+
