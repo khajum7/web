@@ -1,6 +1,6 @@
 import json
 
-def lambda_handler(event, context):
+def lambda_handler(evrent, context):
     print("event",event)
     # Retrieve data from test the esdavent
     message = event['measssage']
