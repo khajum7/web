@@ -10,7 +10,7 @@ phases:
 
   pre_build:
     commands:
-      - echo "Using bash for proper regex support"
+      - echo "Using bash for proper regesx support"
       - bash -c '
           REPO_URL="$CODEBUILD_SOURCE_REPO_URL"
           echo "Repo URL: $REPO_URL"
