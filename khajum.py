@@ -5,7 +5,7 @@ def main():
     print("this won't works")
     print("This is the change in code so it should work yes it is"
 
-    print("this workgs")
+    print("this workgss")
     print("This is the changes in code so it should work yes it is")
 
 
