@@ -1,6 +1,6 @@
 # try.py
 
-def main():
+def main(:
 
     print("this won't workss")
     print("This is the change in code so it should work yes it is"
