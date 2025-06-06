@@ -8,10 +8,12 @@ phases:
       - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
       - apt-get update && apt-get install terraform -y
       - terraform version
+
   pre_build:
     commands:
       - echo Initializing Terraform...
       - terraform init
+
   build:
     commands:
       - echo Importing existing resources...
@@ -20,7 +22,3 @@ phases:
       - terraform plan
       - echo Applying Terraform changes...
       - terraform apply -auto-approve
-
-artifacts:
-  files:
-    - '**/*'
