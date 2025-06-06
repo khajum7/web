@@ -3,6 +3,6 @@ provider "aws" {
 }
 
 resource "aws_db_cluster_snapshot" "snapshot_vivint_cluster" {
-  db_cluster_identifier           = "vivint-store" # your Aurora cluster ID
-  db_cluster_snapshot_identifier = "snapshot-vivint-cluster-june}"
+  db_cluster_identifier           = "vivint-store"
+  db_cluster_snapshot_identifier = "snapshot-vivint-cluster-${replace(timestamp(), "/[^a-zA-Z0-9]/", "-")}"
 }
