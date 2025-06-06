@@ -2,9 +2,6 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      # Install a default runtime to run bash commands, e.g. standard linux environment
-      # terraform isn't a runtime, so we install manually below
     commands:
       - echo Installing Terraform...
       - curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
@@ -21,6 +18,7 @@ phases:
       - terraform plan
       - echo Applying Terraform changes...
       - terraform apply -auto-approve
+
 artifacts:
   files:
     - '**/*'
