@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     REGION: us-west-1
+    CHANGED_LAMBDAS: ""
 
 phases:
   install:
@@ -10,20 +11,25 @@ phases:
       - apt-get update && apt-get install -y zip
 
   pre_build:
-    commands:
-      - git diff --name-only HEAD~1 HEAD > changed_files.txt
-      - export CHANGED_LAMBDAS=$(cat changed_files.txt | grep '^lambda-functions/' | cut -d '/' -f2 | sort -u)
-      - echo "Changed Lambda folders: $CHANGED_LAMBDAS"
+    commands: |
+      CHANGED_LAMBDAS=$(git diff --name-only HEAD~1 HEAD | grep '^lambda-functions/' | cut -d '/' -f2 | sort -u)
+      echo "Changed Lambda folders: $CHANGED_LAMBDAS"
+      echo "export CHANGED_LAMBDAS='$CHANGED_LAMBDAS'" > changed_lambdas.sh
 
   build:
     commands: |
-      for dir in $CHANGED_LAMBDAS; do
-        echo "Deploying Lambda function: $dir"
-        cd lambda-functions/$dir
-        zip -r /tmp/$dir.zip .
-        cd ../../
-        aws lambda update-function-code \
-          --function-name "$dir" \
-          --zip-file fileb:///tmp/$dir.zip \
-          --region "$REGION"
-      done
+      source changed_lambdas.sh
+      if [ -z "$CHANGED_LAMBDAS" ]; then
+        echo "No changed lambdas to deploy."
+      else
+        for dir in $CHANGED_LAMBDAS; do
+          echo "Deploying Lambda function: $dir"
+          cd lambda-functions/$dir
+          zip -r /tmp/$dir.zip .
+          cd ../../
+          aws lambda update-function-code \
+            --function-name "$dir" \
+            --zip-file fileb:///tmp/$dir.zip \
+            --region "$REGION"
+        done
+      fi
