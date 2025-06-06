@@ -18,7 +18,6 @@ resource "aws_rds_cluster" "vivint_store" {
   enabled_cloudwatch_logs_exports = ["audit", "error", "general", "slowquery"]
 
   apply_immediately       = true
-  parameter_group_name    = "voxmg8-pg"
 }
 
 resource "aws_rds_cluster_instance" "vivint_store_instance_1" {
