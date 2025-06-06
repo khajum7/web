@@ -3,33 +3,39 @@ version: 0.2
 env:
   variables:
     REGION: us-west-1
-    CHANGED_LAMBDAS: ""
 
 phases:
   install:
+    runtime-versions:
+      python: 3.11
     commands:
       - apt-get update && apt-get install -y zip
 
   pre_build:
-    commands: |
-      CHANGED_LAMBDAS=$(git diff --name-only HEAD~1 HEAD | grep '^web/lambda-functions/' | cut -d '/' -f3 | sort -u)
-      echo "Changed Lambda folders: $CHANGED_LAMBDAS"
-      echo "export CHANGED_LAMBDAS='$CHANGED_LAMBDAS'" > changed_lambdas.sh
+    commands:
+      - echo "Collecting changed lambda folders..."
+      # Ensure we fetch enough Git history if needed
+      - git fetch --unshallow || true
+      # Find changed lambda_function.py files
+      - |
+        git diff --name-only origin/main...HEAD | grep '^web/lambda-function/.*/lambda_function.py$' | cut -d'/' -f3 | sort | uniq > changed-lambdas.txt
+      - echo "Changed Lambdas:"
+      - cat changed-lambdas.txt || echo "No Lambda functions changed."
 
   build:
-    commands: |
-      source changed_lambdas.sh
-      if [ -z "$CHANGED_LAMBDAS" ]; then
-        echo "No changed lambdas to deploy."
-      else
-        for dir in $CHANGED_LAMBDAS; do
-          echo "Deploying Lambda function: $dir"
-          cd repo/lambda-functions/$dir
-          zip -r /tmp/$dir.zip .
-          cd ../../../
-          aws lambda update-function-code \
-            --function-name "$dir" \
-            --zip-file fileb:///tmp/$dir.zip \
-            --region "$REGION"
-        done
-      fi
+    commands:
+      - |
+        if [ ! -s changed-lambdas.txt ]; then
+          echo "No Lambda changes to deploy."
+        else
+          while read lambda_folder; do
+            echo "Packaging and deploying $lambda_folder"
+            cd web/lambda-function/$lambda_folder || continue
+            zip -r /tmp/$lambda_folder.zip .
+            cd - > /dev/null
+            aws lambda update-function-code \
+              --function-name "$lambda_folder" \
+              --zip-file fileb:///tmp/$lambda_folder.zip \
+              --region "$REGION"
+          done < changed-lambdas.txt
+        fi
