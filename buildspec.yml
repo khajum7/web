@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    REGION: "ap-south-1"  # Replace with your AWS region
+    REGION: "us-west-1"  # Replace with your AWS region
 
 phases:
   install:
