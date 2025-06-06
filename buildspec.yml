@@ -1,43 +1,26 @@
 version: 0.2
 
-env:
-  variables:
-    REGION: "us-west-1"  # Replace with your AWS region
-
 phases:
   install:
+    runtime-versions:
+      # Install a default runtime to run bash commands, e.g. standard linux environment
+      # terraform isn't a runtime, so we install manually below
     commands:
-      - echo Installing dependencies...
-      - pip install awscli
-
+      - echo Installing Terraform...
+      - curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+      - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+      - apt-get update && apt-get install terraform -y
+      - terraform version
   pre_build:
     commands:
-      - echo Fetching full Git history...
-      - git fetch --unshallow || true
-      - echo Identifying changed Lambda directories...
-      - |
-        # Identify directories with changes under 'lambda-function'
-        changed_dirs=$(git diff --name-only origin/main...HEAD | grep '^web/lambda-function/[^/]\+/lambda_function.py$' | cut -d'/' -f3 | sort | uniq)
-        echo "Changed directories: $changed_dirs"
-        if [ -z "$changed_dirs" ]; then
-          echo "No Lambda functions have changed."
-          exit 0
-        fi
-      - echo "Changed Lambda directories identified."
-
+      - echo Initializing Terraform...
+      - terraform init
   build:
     commands:
-      - echo Packaging and deploying changed Lambda functions...
-      - |
-        for dir in $changed_dirs; do
-          echo "Deploying Lambda function in directory: $dir"
-          cd "web/lambda-function/$dir" || continue
-          zip -r "/tmp/$dir.zip" .
-          aws lambda update-function-code --function-name "$dir" --zip-file fileb:///tmp/$dir.zip --region "$REGION"
-          cd - > /dev/null
-        done
-      - echo "Deployment completed for changed Lambda functions."
-
+      - echo Running Terraform Plan...
+      - terraform plan
+      - echo Applying Terraform changes...
+      - terraform apply -auto-approve
 artifacts:
   files:
     - '**/*'
