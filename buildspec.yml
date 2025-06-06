@@ -2,26 +2,33 @@ version: 0.2
 
 env:
   variables:
-    REGION: us-west-1
+    GITHUB_REPO: "your-github-username/your-repo-name"  # ← Replace this
+    BRANCH: "main"  # ← Replace with your default branch
+    REGION: "us-west-1"  # ← Replace with your AWS region
+  secrets-manager:
+    GITHUB_TOKEN: "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"  # ← Replace with your secret name & key
 
 phases:
   install:
     runtime-versions:
       python: 3.11
     commands:
-      - apt-get update && apt-get install -y zip
-
+      - echo Installing Git...
+      - yum install -y git zip
   pre_build:
     commands:
-      - echo "Collecting changed lambda folders..."
-      # Ensure we fetch enough Git history if needed
-      - git fetch --unshallow || true
-      # Find changed lambda_function.py files
+      - echo Cloning full GitHub repo...
+      - git clone -b $BRANCH https://$GITHUB_TOKEN@github.com/$GITHUB_REPO.git repo
+      - cd repo
+      - echo Fetching diff against remote branch...
+      - git fetch origin $BRANCH
       - |
-        git diff --name-only origin/main...HEAD | grep '^web/lambda-function/.*/lambda_function.py$' | cut -d'/' -f3 | sort | uniq > changed-lambdas.txt
-      - echo "Changed Lambdas:"
-      - cat changed-lambdas.txt || echo "No Lambda functions changed."
-
+        git diff --name-only origin/$BRANCH...HEAD | \
+        grep '^web/lambda-function/.*/lambda_function.py$' | \
+        cut -d'/' -f3 | sort | uniq > ../changed-lambdas.txt
+      - cd ..
+      - echo Changed Lambda folders:
+      - cat changed-lambdas.txt || echo "No changes detected."
   build:
     commands:
       - |
@@ -29,10 +36,11 @@ phases:
           echo "No Lambda changes to deploy."
         else
           while read lambda_folder; do
-            echo "Packaging and deploying $lambda_folder"
-            cd web/lambda-function/$lambda_folder || continue
+            echo "Packaging $lambda_folder..."
+            cd repo/web/lambda-function/$lambda_folder || continue
             zip -r /tmp/$lambda_folder.zip .
             cd - > /dev/null
+            echo "Updating function $lambda_folder..."
             aws lambda update-function-code \
               --function-name "$lambda_folder" \
               --zip-file fileb:///tmp/$lambda_folder.zip \
