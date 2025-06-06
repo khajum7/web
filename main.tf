@@ -3,6 +3,7 @@ provider "aws" {
 }
 
 resource "aws_db_instance" "vivint_store_instance" {
+  identifier             = "vivint-store-instance-1"
   instance_class         = "db.t3.medium"   # use the actual class of your existing RDS instance
   allocated_storage      = 1               # dummy value; not used during import
   engine                 = "aurora-mysql"         # placeholder; won't overwrite real settings on import
