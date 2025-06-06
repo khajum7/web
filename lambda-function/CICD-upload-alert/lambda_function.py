@@ -2,7 +2,7 @@ import json
 import requests
 
 def lambda_handler(event, context):
-    print(event, context)
+    print(event, contexst)
     
     sns_message = event['Records'][0]['Sns']['Message']
     message_json = json.loads(sns_message)
