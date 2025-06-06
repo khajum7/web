@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    GITHUB_REPO: "your-github-username/your-repo-name"  # ← Replace this
+    GITHUB_REPO: "khajum7/web"  # ← Replace this
     BRANCH: "main"  # ← Replace with your default branch
     REGION: "us-west-1"  # ← Replace with your AWS region
   secrets-manager:
