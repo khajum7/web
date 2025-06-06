@@ -4,6 +4,7 @@ import requests
 def lambda_handler(event, context):
     print(event)
     print(hellothere)
+    print(sdfa)
     
     sns_message = event['Records'][0]['Sns']['Message']
     message_json = json.loads(sns_message)
