@@ -12,8 +12,8 @@ resource "aws_rds_cluster" "vivint_store" {
   storage_encrypted       = true
   kms_key_id              = "arn:aws:kms:us-west-1:174687093387:key/4754ff9f-6dde-4957-aac3-5462c64c1377"
   backup_retention_period = 1
-  preferred_backup_window = "06:34-07:04"
-  preferred_maintenance_window = "fri:06:57-fri:07:27"
+  preferred_backup_window      = "07:30-08:00"
+  preferred_maintenance_window = "fri:06:00-fri:06:30"
   deletion_protection     = false
   enabled_cloudwatch_logs_exports = ["audit", "error", "general", "slowquery"]
 
