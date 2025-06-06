@@ -18,6 +18,7 @@ resource "aws_rds_cluster" "vivint_store" {
   enabled_cloudwatch_logs_exports = ["audit", "error", "general", "slowquery"]
 
   apply_immediately       = true
+  parameter_group_name    = "voxmg8-pg"
 }
 
 resource "aws_rds_cluster_instance" "vivint_store_instance_1" {
@@ -32,6 +33,5 @@ resource "aws_rds_cluster_instance" "vivint_store_instance_1" {
   monitoring_role_arn     = "arn:aws:iam::174687093387:role/rds-monitoring-role"
   performance_insights_enabled     = false
   performance_insights_kms_key_id = "arn:aws:kms:us-west-1:174687093387:key/4754ff9f-6dde-4957-aac3-5462c64c1377"
-  parameter_group_name    = "voxmg8-pg"
   apply_immediately       = true
 }
