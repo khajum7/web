@@ -11,6 +11,8 @@ phases:
   pre_build:
     commands:
       - echo Initializing Terraform...
+      - terraform import aws_rds_cluster.vivint_store vivint-store
+      - terraform import aws_rds_cluster_instance.vivint_store_instance_1 vivint-store-instance-1
       - terraform init
   build:
     commands:
