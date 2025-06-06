@@ -5,7 +5,7 @@ provider "aws" {
 resource "aws_rds_cluster" "vivint_store" {
   cluster_identifier      = "vivint-store"
   engine                  = "aurora-mysql"
-  engine_version          = "8.0.mysql_aurora.3.05.2"  # Upgrade target
+  engine_version          = "8.0.mysql_aurora.3.08.2"  # Upgrade target
   master_username         = "vivintStore"
   db_subnet_group_name    = "stg-db-sg"
   vpc_security_group_ids  = ["sg-0cc12cef7ededca5c"]
