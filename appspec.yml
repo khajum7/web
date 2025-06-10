@@ -1,0 +1,21 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/www/html/jaaz
+file_exists_behavior: OVERWRITE
+
+permissions:
+  - object: /var/www/html/jaaz
+    owner: ec2-user # staging => ubuntu
+    group: ec2-user # staging => ubuntu
+    mode: 755
+    type:
+      - directory
+
+  - object: /var/www/html/jaaz
+    owner: ec2-user # staging => ubuntu
+    group: ec2-user # staging => ubuntu
+    mode: 644
+    type:
+      - file
