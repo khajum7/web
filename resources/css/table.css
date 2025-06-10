@@ -1,0 +1,20 @@
+table.table {
+  @apply w-full font-primary;
+}
+table.table > thead > tr > th {
+  @apply px-4 py-3 text-left bg-white dark:bg-gray-900 dark:border-gray-700 font-bold uppercase text-sm border-b border-gray-300;
+}
+table.table > tbody > tr:nth-child(even) {
+  @apply even:bg-gray-100;
+}
+table.table > tbody > tr:nth-child(odd) {
+  @apply even:bg-gray-50;
+}
+table.table > tbody > tr > td {
+  @apply px-4 py-3.5;
+}
+
+table.table > thead > tr > th:first-child {
+  @apply  bg-gray-50;
+}
+
