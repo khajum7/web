@@ -4,7 +4,7 @@ Junior Jazz Order Portal is an online website for ordering pre-existing sets of 
 * Node.js 
 * PHP
 * Composer
-
+s
 
 ## Steps to setup the project
 Please follow these steps to set up your project locally.
