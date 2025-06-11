@@ -6,7 +6,7 @@ Junior Jazz Order Portal is an online website for ordering pre-existing sets of 
 * Composer
 
 
-## Steps to setup the project
+## Steps to setup the projects
 Please follow these steps to set up your project locally.
 <br>
 1. <img src="https://img.icons8.com/ios/20/000000/code-fork.png"/> **Fork** the <b>_junior-jaaz-order-portal_</b> project into your account repository.
