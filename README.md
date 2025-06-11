@@ -13,7 +13,7 @@ Please follow these steps to set up your project locally.
 2. <img src="https://img.icons8.com/external-flat-icons-inmotus-design/20/000000/external-clone-clone-flat-icons-inmotus-design-2.png"/> **Clone** the <b>_junior-jaaz-order-portal_</b> repository.
 
 ```
-https://github.com/shikhartech/junior-jaaz-order-portal.git
+https://github.com/shikhartech/juniors-jaaz-order-portal.git
 ```
 
 OR
