@@ -1,7 +1,7 @@
 # Junior Jazz Portal
 Junior Jazz Order Portal is an online website for ordering pre-existing sets of jerseys or custom ones .
 ## Sofware required
-* Node.js 
+* Node.js s
 * PHP
 * Composer
 
