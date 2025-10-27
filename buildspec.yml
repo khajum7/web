@@ -21,6 +21,7 @@ phases:
       - export PATH="$CARGO_HOME/bin:$PATH"
       - rustc --version || true
       - echo "[install] Installing workspace dependencies"
+      - export NODE_OPTIONS="--max_old_space_size=16384"
       - pnpm install --no-frozen-lockfile
 
   pre_build:
@@ -32,12 +33,25 @@ phases:
     commands:
       - echo "[build] Exporting required env vars for web build"
       - export VITE_BASE_URL="http://man.shikhartech.com/"
-      - export NODE_OPTIONS="--max_old_space_size=8192"
+      - export NODE_OPTIONS="--max_old_space_size=16384"
       - export HOPP_DISABLE_PWA="true"
       - export HOPP_DISABLE_SOURCEMAP="true"
       - export HOPP_DISABLE_MINIFY="true"
-      - echo "[build] Building all packages/* workspaces with pnpm (excluding examples and desktop) serialized"
-      - pnpm -r --workspace-concurrency=1 --filter "./packages/**" --filter "!**/examples/**" --filter "!**/example/**" --filter "!./packages/hoppscotch-desktop/**" --filter "!./packages/hoppscotch-selfhost-desktop/**" run build
+      - echo "[build] Building packages individually to avoid memory issues"
+      - echo "[build] Building backend first..."
+      - pnpm --filter hoppscotch-backend run build
+      - echo "[build] Building data package..."
+      - pnpm --filter @hoppscotch/data run build
+      - echo "[build] Building kernel package..."
+      - pnpm --filter @hoppscotch/kernel run build
+      - echo "[build] Building js-sandbox package..."
+      - pnpm --filter @hoppscotch/js-sandbox run build
+      - echo "[build] Building CLI package..."
+      - pnpm --filter @hoppscotch/cli run build
+      - echo "[build] Building sh-admin package..."
+      - pnpm --filter hoppscotch-sh-admin run build
+      - echo "[build] Building selfhost-web package..."
+      - pnpm --filter @hoppscotch/selfhost-web run build
 
   post_build:
     commands:
@@ -59,6 +73,23 @@ artifacts:
     - pnpm-workspace.yaml
     - pnpm-lock.yaml
     - healthcheck.sh
+  secondary-artifacts:
+    cicdtest:
+      files:
+        - appspec.yml  
+        - scripts/**/*
+        - packages/**/dist/**/*
+        - packages/**/build/**/*
+        - packages/**/out/**/*
+        - packages/**/.next/**/*
+        - packages/**/src-tauri/target/**/*
+        - packages/**/webapp-server/target/**/*
+        - packages/**/plugin-workspace/target/**/*
+        - packages/**/public/**/*
+        - package.json
+        - pnpm-workspace.yaml
+        - pnpm-lock.yaml
+        - healthcheck.sh
 
 cache:
   paths:
