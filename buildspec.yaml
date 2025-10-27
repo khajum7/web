@@ -1,0 +1,70 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "[install] Updating system packages and installing prerequisites (Ubuntu)"
+      - apt-get update -y
+      - apt-get install -y software-properties-common
+      - add-apt-repository -y universe || true
+      - apt-get update -y
+      - echo "[install] Installing pnpm globally"
+      - npm install -g pnpm@8.15.5
+      - pnpm -v
+      - echo "[install] Installing Rust toolchain via rustup (required for desktop/tauri)"
+      - curl -fsSL https://sh.rustup.rs -o rustup.sh
+      - sh rustup.sh -y
+      - export CARGO_HOME="$HOME/.cargo"
+      - export RUSTUP_HOME="$HOME/.rustup"
+      - export PATH="$CARGO_HOME/bin:$PATH"
+      - rustc --version || true
+      - echo "[install] Installing workspace dependencies"
+      - pnpm install --no-frozen-lockfile
+
+  pre_build:
+    commands:
+      - echo "[pre_build] Running GraphQL code generation where available"
+      - pnpm -r --filter "./packages/**" run codegen || true
+
+  build:
+    commands:
+      - echo "[build] Exporting required env vars for web build"
+      - export VITE_BASE_URL="http://man.shikhartech.com/"
+      - export NODE_OPTIONS="--max_old_space_size=8192"
+      - export HOPP_DISABLE_PWA="true"
+      - export HOPP_DISABLE_SOURCEMAP="true"
+      - export HOPP_DISABLE_MINIFY="true"
+      - echo "[build] Building all packages/* workspaces with pnpm (excluding examples and desktop) serialized"
+      - pnpm -r --workspace-concurrency=1 --filter "./packages/**" --filter "!**/examples/**" --filter "!**/example/**" --filter "!./packages/hoppscotch-desktop/**" --filter "!./packages/hoppscotch-selfhost-desktop/**" run build
+
+  post_build:
+    commands:
+      - echo "Build completed on $(date)"
+
+artifacts:
+  files:
+    - appspec.yml  
+    - scripts/**/*
+    - packages/**/dist/**/*
+    - packages/**/build/**/*
+    - packages/**/out/**/*
+    - packages/**/.next/**/*
+    - packages/**/src-tauri/target/**/*
+    - packages/**/webapp-server/target/**/*
+    - packages/**/plugin-workspace/target/**/*
+    - packages/**/public/**/*
+    - package.json
+    - pnpm-workspace.yaml
+    - pnpm-lock.yaml
+    - healthcheck.sh
+
+cache:
+  paths:
+    - '~/.pnpm-store/**/*'
+    - 'node_modules/**/*'
+    - 'packages/**/node_modules/**/*'
+    - '~/.cargo/registry/index/**/*'
+    - '~/.cargo/registry/cache/**/*'
+    - '~/.cargo/git/db/**/*'
