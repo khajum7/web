@@ -2,100 +2,22 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 22
     commands:
-      - echo "[install] Updating system packages and installing prerequisites (Ubuntu)"
-      - apt-get update -y
-      - apt-get install -y software-properties-common
-      - add-apt-repository -y universe || true
-      - apt-get update -y
-      - echo "[install] Installing pnpm globally"
-      - npm install -g pnpm@8.15.5
-      - pnpm -v
-      - echo "[install] Installing Rust toolchain via rustup (required for desktop/tauri)"
-      - curl -fsSL https://sh.rustup.rs -o rustup.sh
-      - sh rustup.sh -y
-      - export CARGO_HOME="$HOME/.cargo"
-      - export RUSTUP_HOME="$HOME/.rustup"
-      - export PATH="$CARGO_HOME/bin:$PATH"
-      - rustc --version || true
-      - echo "[install] Installing workspace dependencies"
-      - export NODE_OPTIONS="--max_old_space_size=16384"
-      - pnpm install --no-frozen-lockfile
+      - echo Installing Terraform...
+      - curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+      - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+      - apt-get update && apt-get install terraform -y
+      - terraform version
 
   pre_build:
     commands:
-      - echo "[pre_build] Running GraphQL code generation where available"
-      - pnpm -r --filter "./packages/**" run codegen || true
+      - echo Initializing Terraform...
+      - terraform init
 
   build:
     commands:
-      - echo "[build] Exporting required env vars for web build"
-      - export VITE_BASE_URL="http://man.shikhartech.com/"
-      - export NODE_OPTIONS="--max_old_space_size=16384"
-      - export HOPP_DISABLE_PWA="true"
-      - export HOPP_DISABLE_SOURCEMAP="true"
-      - export HOPP_DISABLE_MINIFY="true"
-      - echo "[build] Building packages individually to avoid memory issues"
-      - echo "[build] Building backend first..."
-      - pnpm --filter hoppscotch-backend run build
-      - echo "[build] Building data package..."
-      - pnpm --filter @hoppscotch/data run build
-      - echo "[build] Building kernel package..."
-      - pnpm --filter @hoppscotch/kernel run build
-      - echo "[build] Building js-sandbox package..."
-      - pnpm --filter @hoppscotch/js-sandbox run build
-      - echo "[build] Building CLI package..."
-      - pnpm --filter @hoppscotch/cli run build
-      - echo "[build] Building sh-admin package..."
-      - pnpm --filter hoppscotch-sh-admin run build
-      - echo "[build] Building selfhost-web package..."
-      - pnpm --filter @hoppscotch/selfhost-web run build
-
-  post_build:
-    commands:
-      - echo "Build completed on $(date)"
-
-artifacts:
-  files:
-    - appspec.yml  
-    - scripts/**/*
-    - packages/**/dist/**/*
-    - packages/**/build/**/*
-    - packages/**/out/**/*
-    - packages/**/.next/**/*
-    - packages/**/src-tauri/target/**/*
-    - packages/**/webapp-server/target/**/*
-    - packages/**/plugin-workspace/target/**/*
-    - packages/**/public/**/*
-    - package.json
-    - pnpm-workspace.yaml
-    - pnpm-lock.yaml
-    - healthcheck.sh
-  secondary-artifacts:
-    cicdtest:
-      files:
-        - appspec.yml  
-        - scripts/**/*
-        - packages/**/dist/**/*
-        - packages/**/build/**/*
-        - packages/**/out/**/*
-        - packages/**/.next/**/*
-        - packages/**/src-tauri/target/**/*
-        - packages/**/webapp-server/target/**/*
-        - packages/**/plugin-workspace/target/**/*
-        - packages/**/public/**/*
-        - package.json
-        - pnpm-workspace.yaml
-        - pnpm-lock.yaml
-        - healthcheck.sh
-
-cache:
-  paths:
-    - '~/.pnpm-store/**/*'
-    - 'node_modules/**/*'
-    - 'packages/**/node_modules/**/*'
-    - '~/.cargo/registry/index/**/*'
-    - '~/.cargo/registry/cache/**/*'
-    - '~/.cargo/git/db/**/*'
+      - echo Importing existing resources...
+      - echo Running Terraform Plan...
+      - terraform plan
+      - echo Applying Re- Run Terraform changes...
+      - terraform apply -auto-approve
