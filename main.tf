@@ -51,7 +51,7 @@ resource "aws_security_group" "st_server_sg" {
 # IAM Role and Instance Profile
 # --------------------------
 resource "aws_iam_role" "st_ec2_role" {
-  name = "ST-Ec2-Role"
+  name = "ST-Ec2-Roles"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
